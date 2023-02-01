@@ -1,0 +1,83 @@
+|| FUNZIONI PER LA GESTIONE DI INPUT E OUTPUT
+def choiceOp(): integer {
+	integer op;
+
+	("Quale operazione vuoi eseguire?") -->! ;
+	("1. Somma") -->! ;
+	("2. Sottrazione") -->! ;
+	("3. Moltiplicazione") -->! ;
+	("4. Divisione") -->! ;
+	op <-- ;
+
+	return op;
+}
+
+def insertInput(out float a, b): void {
+    a, b <-- "Inserisci i due operandi: ";
+}
+
+float result;
+
+|| Programma principale
+start:
+def program(): void {
+    boolean flag << true;
+
+	while flag loop {
+        || per come è definita la grammatica le dichiarazioni possono trovarsi solo all'inizio
+	    integer choice << choiceOp();
+	    integer continue << 0;
+	    integer i;
+
+        float a, b;
+        insertInput(a, b);
+
+	    if choice = 1 then {
+           result << sum(a,b);
+	    }
+	    if choice = 2 then {
+            result << sub(a,b);
+        }
+        if choice = 3 then {
+            result << mul(a,b);
+        }
+        if choice = 4 then {
+            result << div(a,b);
+        }
+
+        || & result -> da aggiungere
+        ("Il risultato è ") -->!;
+
+        || stampa di 4 ritorni a capo
+        for i << 1 to 4 loop {
+            ("") -->!;
+        }
+
+        ("Vuoi continuare?") -->! ;
+        ("0. Esci") -->! ;
+        ("1. Continua") -->! ;
+        continue <-- ;
+        if (continue = 0) then {
+            flag << false;
+        }
+	}
+}
+
+|*
+    Definizione delle funzioni per le varie operazioni
+|
+def sum(float a | float b): float{
+    return (a + b);
+}
+
+def sub(float a | float b): float{
+    return (a - b);
+}
+
+def mul(float a | float b): float{
+    return (a * b);
+}
+
+def div(float a | float b): float{
+    return (a / b);
+}

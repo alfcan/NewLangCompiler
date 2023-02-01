@@ -1,0 +1,330 @@
+package esercitazione5;
+import java_cup.runtime.*;
+import esercitazione5.syntax.*;
+import esercitazione5.syntax.const_.*;
+import esercitazione5.syntax.decl.*;
+import esercitazione5.syntax.expr.*;
+import esercitazione5.syntax.idinit.*;
+import esercitazione5.syntax.statement.*;
+import esercitazione5.syntax.type.*;
+import java.util.ArrayList;
+import java_cup.runtime.Symbol;
+
+class Parser;
+
+parser code{:
+
+    public void report_error(String msg, Object info) {
+      Symbol sym = (Symbol)info;
+      System.out.println(msg + ": " + symbl_name_from_id(sym.sym));
+    }
+
+    public void syntax_error(Symbol cur_token) {
+      System.out.println("<Syntax error: " + symbl_name_from_id(cur_token.sym) + ">"
+      + "\n\t Detected at line: " + (cur_token.left + 1) + "; column: " + (cur_token.right + 1));
+    }
+
+:}
+
+/* Terminals (tokens returned) */
+terminal DEF, OUT, FOR, IF, ELSE, THEN, WHILE, TO, LOOP;
+terminal MAIN, SEMI, COMMA, PIPE, VAR, INT, FLOAT, STRING, BOOL, CHAR, VOID, READ, WRITE, WRITELN,
+         LPAR, RPAR, LBRAC, RBRAC, COLON, ASSIGN, RETURN;
+terminal PLUS, MINUS, TIMES, DIV, POW, STR_CONCAT, EQ, NE, LT, LE, GT, GE, AND, OR, NOT;
+terminal int ID;
+terminal String STRING_CONST;
+terminal int INTEGER_CONST;
+terminal float FLOAT_CONST;
+terminal char CHAR_CONST;
+terminal boolean TRUE, FALSE;
+
+/* Non terminals */
+nonterminal ProgramOP Program;
+nonterminal ArrayList<AbstractDecl> DeclList;
+nonterminal MainFunDeclOP MainFunDecl;
+nonterminal VarDeclOP VarDecl;
+nonterminal FunDeclOP FunDecl;
+nonterminal TypeOP Type, TypeOrVoid;
+nonterminal ArrayList<AbstractIdInit> IdInitList;
+nonterminal ArrayList<AbstractIdInit> IdInitObblList;
+nonterminal ExprOP Expr;
+nonterminal AbstractConst Const;
+nonterminal ArrayList<ParDeclOP> ParamDeclList, NonEmptyParamDeclList;
+nonterminal BodyOP Body;
+nonterminal ArrayList<VarDeclOP> VarDeclList;
+nonterminal ArrayList<Statement> StatList;
+nonterminal ParDeclOP ParDecl;
+nonterminal ArrayList<Identifier> IdList;
+nonterminal Statement Stat;
+nonterminal IfStatOP IfStat;
+nonterminal ForStatOP ForStat;
+nonterminal ReadStatOP ReadStat;
+nonterminal WriteStatOP WriteStat;
+nonterminal AssignStatOP AssignStat;
+nonterminal WhileStatOP WhileStat;
+nonterminal FunCallStatOP FunCallStat;
+nonterminal FunCallExprOP FunCallExpr;
+nonterminal ElseOP Else;
+nonterminal ArrayList<ExprOP> ExprList;
+
+
+/* Precedences */
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence nonassoc GT, GE, LT, LE, EQ, NE;
+precedence left STR_CONCAT;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIV;
+precedence left POW;
+
+start with Program;
+
+Program ::=  DeclList:declList1 MainFunDecl:mainFunDecl DeclList:declList2
+    {: ArrayList<AbstractDecl> declList = new ArrayList<AbstractDecl>();
+       declList.addAll(declList1);
+       declList.addAll(declList2);
+       RESULT = new ProgramOP(declList, mainFunDecl); :}
+;
+
+DeclList ::= VarDecl:varDecl DeclList:declList
+    {: RESULT = new ArrayList<AbstractDecl>();
+       RESULT.add(varDecl);
+       RESULT.addAll(declList);
+    :}
+    | FunDecl:funDecl DeclList:declList
+    {: RESULT = new ArrayList<AbstractDecl>();
+       RESULT.add(funDecl);
+       RESULT.addAll(declList);
+    :}
+    | /* empty */ {: RESULT = new ArrayList<AbstractDecl>(); :}
+;
+
+MainFunDecl ::= MAIN FunDecl:funDecl
+    {: RESULT = new MainFunDeclOP(funDecl); :}
+;
+
+VarDecl ::= Type:type IdInitList:idList SEMI {:  RESULT = new VarDeclOP(type, idList); :}
+          | VAR IdInitObblList:idList SEMI {: RESULT = new VarDeclOP(new TypeOP("var"), idList); :}
+;
+
+Type ::= INT {: RESULT = new TypeOP("integer"); :}
+       | BOOL {: RESULT = new TypeOP("bool"); :}
+       | FLOAT {: RESULT = new TypeOP("float"); :}
+       | STRING {: RESULT = new TypeOP("string"); :}
+       | CHAR {: RESULT = new TypeOP("char"); :}
+;
+
+IdInitList ::= ID:id {: RESULT = new ArrayList<AbstractIdInit>();
+                        IdInitOP idInitOP = new IdInitOP(new Identifier(id));
+                        idInitOP.getId().setLine(idleft);
+                        RESULT.add(idInitOP);
+                     :}
+             | IdInitList:idInitList COMMA ID:id {: RESULT = new ArrayList<AbstractIdInit>();
+                                                    IdInitOP idInitOP = new IdInitOP(new Identifier(id));
+                                                    idInitOP.getId().setLine(idleft);
+                                                    RESULT.addAll(idInitList);
+                                                    RESULT.add(idInitOP);
+                                                 :}
+             | ID:id ASSIGN Expr:expr {: RESULT = new ArrayList<AbstractIdInit>();
+                                         IdInitOP idInitOP = new IdInitOP(new Identifier(id), expr);
+                                         idInitOP.getId().setLine(idleft);
+                                         idInitOP.getExpr().setLine(exprleft);
+                                         RESULT.add(idInitOP);
+                                      :}
+             | IdInitList:idInitList COMMA ID:id ASSIGN Expr:expr {: RESULT = new ArrayList<AbstractIdInit>();
+                                                                     IdInitOP idInitOP = new IdInitOP(new Identifier(id), expr);
+                                                                     idInitOP.getId().setLine(idleft);
+                                                                     idInitOP.getExpr().setLine(exprleft);
+                                                                     RESULT.addAll(idInitList);
+                                                                     RESULT.add(idInitOP);
+                                                                  :}
+;
+
+IdInitObblList ::= ID:id ASSIGN Const:c {: RESULT = new ArrayList<AbstractIdInit>();
+                                           IdInitObblOP idInitOP = new IdInitObblOP(new Identifier(id), c);
+                                           idInitOP.getId().setLine(idleft);
+                                           RESULT.add(idInitOP);
+                                        :}
+	             | IdInitObblList:idInitList COMMA ID:id ASSIGN Const:c {: RESULT = new ArrayList<AbstractIdInit>();
+                                                                           IdInitObblOP idInitOP = new IdInitObblOP(new Identifier(id), c);
+                                                                           idInitOP.getId().setLine(idleft);
+                                                                           RESULT.addAll(idInitList);
+                                                                           RESULT.add(idInitOP);
+                                                                        :}
+;
+
+Const ::= INTEGER_CONST:value {: RESULT = new IntegerConst(value); :}
+        | FLOAT_CONST:value {: RESULT = new FloatConst(value); :}
+        | TRUE {: RESULT = new BooleanConst(true); :}
+        | FALSE {: RESULT = new BooleanConst(false); :}
+        | STRING_CONST:value {: RESULT = new StringConst(value); :}
+        | CHAR_CONST:value {: RESULT = new CharConst(value); :}
+;
+
+FunDecl ::= DEF ID:id LPAR ParamDeclList:paramDeclList RPAR COLON TypeOrVoid:type Body:body
+            {: FunDeclOP funDeclOP = new FunDeclOP(new Identifier(id), paramDeclList, type, body);
+               funDeclOP.getId().setLine(idleft);
+               RESULT = funDeclOP;
+            :}
+;
+
+TypeOrVoid ::= Type:type {: RESULT = type; :} | VOID {: RESULT = new TypeOP("void"); :};
+
+Body ::= LBRAC VarDeclList:varDeclList StatList:statList RBRAC {: RESULT = new BodyOP(varDeclList, statList); :}
+       | LBRAC VarDeclList:varDeclList RBRAC {: RESULT = new BodyOP(varDeclList); :}
+;
+
+ParamDeclList ::= /* empty */ {: RESULT = new ArrayList<ParDeclOP>(); :}
+	            | NonEmptyParamDeclList:paramList {: RESULT = paramList; :}
+;
+
+NonEmptyParamDeclList ::= ParDecl:param {:
+                                           RESULT = new ArrayList<ParDeclOP>();
+                                           RESULT.add(param);
+                                        :}
+                        | NonEmptyParamDeclList:paramList PIPE ParDecl:param {:
+                                                                               RESULT = new ArrayList<ParDeclOP>();
+                                                                               RESULT.addAll(paramList);
+                                                                               RESULT.add(param);
+                                                                             :}
+;
+
+ParDecl ::= Type:type IdList:idList {: RESULT = new ParDeclOP(false, type, idList); :}
+          | OUT Type:type IdList:idList {: RESULT = new ParDeclOP(true, type, idList); :}
+;
+
+VarDeclList ::= /* empty */ {: RESULT = new ArrayList<VarDeclOP>(); :}
+              | VarDecl:varDecl VarDeclList:varDeclList {:
+                                                          RESULT = new ArrayList<VarDeclOP>();
+                                                          RESULT.add(varDecl);
+                                                          RESULT.addAll(varDeclList);
+                                                        :}
+;
+
+StatList ::= Stat:stat {:
+                          RESULT = new ArrayList<Statement>();
+                          stat.setLine(statleft);
+                          RESULT.add(stat);
+                       :}
+           | Stat:stat StatList:statList {: RESULT = new ArrayList<Statement>();
+                                            RESULT.add(stat);
+                                            stat.setLine(statleft);
+                                            RESULT.addAll(statList);
+                                         :}
+;
+
+Stat ::= IfStat:ifStat {: RESULT = ifStat;
+                          ifStat.setLine(ifStatleft);
+                       :}
+       | ForStat:forStat {:
+                            RESULT = forStat;
+                            forStat.setLine(forStatleft);
+                         :}
+       | ReadStat:readStat SEMI {: RESULT = readStat;
+                                   readStat.setLine(readStatleft);
+                                :}
+       | WriteStat:writeStat SEMI {: RESULT = writeStat;
+                                     writeStat.setLine(writeStatleft);
+                                  :}
+       | AssignStat:assignStat SEMI {: RESULT = assignStat;
+                                       assignStat.setLine(assignStatleft);
+                                    :}
+       | WhileStat:whileStat {: RESULT = whileStat;
+                                whileStat.setLine(whileStatleft);
+                             :}
+       | FunCallStat:funcall SEMI {: RESULT = funcall;
+                                     funcall.setLine(funcallleft);
+                                  :}
+       | RETURN Expr:expr SEMI {: RESULT = new ReturnOP(expr);
+                                  expr.setLine(exprleft);
+                               :}
+       | RETURN SEMI {: RESULT = new ReturnOP(); :}
+;
+
+IfStat ::= IF Expr:expr THEN Body:body Else:elseBody {:
+                                                        RESULT = new IfStatOP(expr, body, elseBody);
+                                                        expr.setLine(exprleft);
+                                                     :};
+
+Else ::= /* empty */
+       | ELSE Body:body {: RESULT = new ElseOP(body); :}
+;
+
+WhileStat ::= WHILE Expr:expr LOOP Body:body {:
+                                                RESULT = new WhileStatOP(expr, body);
+                                                expr.setLine(exprleft);
+                                             :};
+
+ForStat ::= FOR ID:id ASSIGN Expr:e1 TO Expr:e2 LOOP Body:body
+            {: RESULT = new ForStatOP(new Identifier(id), e1, e2, body); :};
+
+ReadStat ::= IdList:idList READ STRING_CONST:s {: RESULT = new ReadStatOP(idList, new StringConst(s)); :}
+           | IdList:idList READ {: RESULT = new ReadStatOP(idList); :}
+;
+
+IdList ::= ID:id {: RESULT = new ArrayList<Identifier>();
+                    Identifier identifier = new Identifier(id);
+                    identifier.setLine(idleft);
+                    RESULT.add(identifier);
+                 :}
+         | IdList:idList COMMA ID:id {: RESULT = new ArrayList<Identifier>();
+                                        Identifier identifier = new Identifier(id);
+                                        identifier.setLine(idleft);
+                                        RESULT.addAll(idList);
+                                        RESULT.add(identifier);
+                                     :}
+;
+
+WriteStat ::= LPAR ExprList:exprList RPAR WRITE {: RESULT = new WriteStatOP(exprList, "write"); :}
+            | LPAR ExprList:exprList RPAR WRITELN {: RESULT = new WriteStatOP(exprList, "writeln"); :}
+;
+
+AssignStat ::= IdList:idList ASSIGN ExprList:exprList {: RESULT = new AssignStatOP(idList, exprList); :};
+
+FunCallStat ::= ID:id LPAR ExprList:exprList RPAR {: RESULT = new FunCallStatOP(new Identifier(id), exprList); :}
+              | ID:id LPAR RPAR {: RESULT = new FunCallStatOP(new Identifier(id)); :}
+;
+
+FunCallExpr ::= ID:id LPAR ExprList:exprList RPAR {:
+                                                    RESULT = new FunCallExprOP(new Identifier(id), exprList);
+                                                  :}
+              | ID:id LPAR RPAR {: RESULT = new FunCallExprOP(new Identifier(id)); :}
+;
+
+ExprList ::= Expr:e {: e.setLine(eleft);
+                       RESULT = new ArrayList<ExprOP>();
+                       RESULT.add(e);
+                     :}
+           | Expr:expr COMMA ExprList:exprList {: expr.setLine(exprleft);
+                                                  RESULT = new ArrayList<ExprOP>();
+                                                  RESULT.add(expr);
+                                                  RESULT.addAll(exprList);
+                                                :}
+;
+
+Expr ::= Const:c {: RESULT = c; :}
+       | ID:id {: RESULT = new Identifier(id); :}
+	   | FunCallExpr:fc {: fc.setLine(fcleft); RESULT = fc; :}
+	   | Expr:e1 PLUS Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new PlusOP(e1, e2); :}
+       | Expr:e1 MINUS Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new MinusOP(e1, e2); :}
+       | Expr:e1 TIMES Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new TimesOP(e1, e2); :}
+       | Expr:e1 DIV Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new DivOP(e1, e2); :}
+       | Expr:e1 AND Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new AndOP(e1, e2); :}
+       | Expr:e1 OR Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new OrOP(e1, e2); :}
+       | Expr:e1 STR_CONCAT Expr:e2 {:
+                                        e1.setLine(e1left);
+                                        e2.setLine(e2left);
+                                        RESULT = new StringConcatOP(e1, e2);
+                                    :}
+       | Expr:e1 POW Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new PowOP(e1, e2); :}
+       | Expr:e1 GT Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new GTOP(e1, e2); :}
+       | Expr:e1 GE Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new GEOP(e1, e2); :}
+       | Expr:e1 LT Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new LTOP(e1, e2); :}
+       | Expr:e1 LE Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new LEOP(e1, e2); :}
+       | Expr:e1 EQ Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new EQOP(e1, e2); :}
+       | Expr:e1 NE Expr:e2 {: e1.setLine(e1left); e2.setLine(e2left); RESULT = new NEOP(e1, e2); :}
+       | MINUS Expr:e {: e.setLine(eleft); RESULT = new UminusOP(e); :}
+       | NOT Expr:e {: e.setLine(eleft); RESULT = new NotOP(e); :}
+       | LPAR Expr:e RPAR {: e.setLine(eleft); RESULT = e; :}
+;

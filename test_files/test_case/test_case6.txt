@@ -1,0 +1,21 @@
+|| TEST CASE: prova for con utilizzo di espressioni
+
+def function(integer val): integer {
+    return val + 10;
+}
+
+
+start:
+    def start(): void {
+        string s << "Ciao Prova";
+        integer n << 10;
+        integer a<<0, b << 0;
+
+         for d << a + 1 to function(0) loop{
+            b <<b+1;
+         }
+
+        for i << function(0) to function(n) loop {
+            ("Il valore è ", function(i), "\nBravo!") -->!;
+        }
+    }

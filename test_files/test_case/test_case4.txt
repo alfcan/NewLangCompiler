@@ -1,0 +1,16 @@
+|| TEST CASE: prova shadowing di una variabile
+
+def provaVoid(out string a): void{
+    (a) -->!;
+}
+
+start:
+def start(): void {
+    integer p << 0;
+    string a << "C";
+
+    if p = 0 then {
+        string a << "Ciao Prova";
+        provaVoid(a);
+    }
+}

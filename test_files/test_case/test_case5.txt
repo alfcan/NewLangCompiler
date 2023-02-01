@@ -1,0 +1,21 @@
+|| TEST CASE: prova costrutti if, else, while e for
+
+start:
+def start(): void {
+    string s << "Ciao Prova";
+    integer n << 10;
+
+    for i << 0 to n loop {
+        if s = "Ciao Prova" then {
+            ("Ciao Uno Due Tre") -->!;
+        }
+        else {
+            s << "Ciao Uno";
+            (s) -->!;
+        }
+        while(s = "Ciao Uno") loop {
+            s << "Ciao Prova";
+        }
+        s << "Ciao Uno Due Tre";
+    }
+}

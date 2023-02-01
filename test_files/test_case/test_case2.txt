@@ -1,0 +1,23 @@
+|| TEST CASE: prova della stampa dei parametri di tipo out (NON STRINGHE)
+
+def provaVoid(out integer ciao): void{
+    ciao << 1;
+
+    ("Il valore prima dell'input", ciao) -->!;
+
+    ciao <-- "Inserisci valore intero: ";
+
+    ("Il valore dopo l'input", ciao) -->!;
+}
+
+start:
+    def start(): void {
+        integer a << 0;
+
+        ("Il valore nel main prima della chiamata a funzione ", a) -->!;
+
+        provaVoid(a);
+
+        ("Il valore nel main dopo della chiamata a funzione ",a) -->!;
+
+    }

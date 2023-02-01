@@ -1,0 +1,23 @@
+|| TEST CASE: prova stampa per i parametri di tipo out
+
+def prova(out integer a): integer{
+    a << 10;
+    return a;
+}
+
+def provaVoid(out integer ciao): void{
+    ciao << 1;
+
+    (ciao) -->!;
+}
+
+start:
+    def start(): void {
+        integer a << 0;
+
+        (a) -->!;
+
+        provaVoid(a);
+
+        (a) -->!;
+}

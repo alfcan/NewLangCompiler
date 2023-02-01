@@ -1,0 +1,12 @@
+|| TEST CASE: passaggio di variabile in funzione con tipo out
+
+def getNum(out integer num): void {
+    num <--;
+}
+
+start:
+def start(): void {
+    integer input << 1123123;
+    getNum(input);
+    (input) -->;
+}

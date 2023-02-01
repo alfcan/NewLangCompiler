@@ -1,0 +1,27 @@
+|*
+TEST CASE: lista di assegnazione e
+           controllo dei return -> se si ritorna un espressione di tipo diverso dal tipo della funzione
+           viene lanciata un InvalidReturnException
+            (il nostro compilatore non controlla la logica quindi il return
+            deve essere presente fuori dai costrutti interni della funzione)
+|
+
+start:
+    def esempio(): integer{
+
+        integer a,b,c;
+
+        a,b,c << 1,2,0;
+
+        if (c = 0) then {
+            for i << 0 to 10 loop {
+                if (c = 0) then {
+                    return c;
+                }
+            }
+        } else {
+            return b;
+        }
+
+        return a;
+    }

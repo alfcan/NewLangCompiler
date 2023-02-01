@@ -1,0 +1,26 @@
+def bigger(out integer a, b): integer {
+
+    integer c << a + b;
+
+    return c;
+}
+
+def stampa(string msg1, msg2): string {
+    ("stampa") -->!;
+
+    return msg1 & msg2;
+}
+
+start:
+def main(): void {
+    integer a << 1, b << 2;
+    integer max << bigger(a, b);
+
+    string ciao;
+
+    ciao << "ciao " & stampa("non ", "lo so 1235");
+
+    (ciao) -->!;
+
+    return ;
+}

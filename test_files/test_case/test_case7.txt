@@ -1,0 +1,17 @@
+|| TEST CASE: Main con parametri evalore di return.
+|| Con prova inizializzazione di var con string concat
+
+def function(): string{
+    return "function";
+}
+
+start:
+    def start(integer a | string b): void {
+        string nuova << "Il secondo valore è:" & b;
+        string nuova1 << "La prova di stringa concatenata con funzione: " & function();
+        string nuova2 << "Inizializzazione con string const";
+
+        ("Hai inserito ", a, "\n" , nuova) -->;
+        (nuova1) -->!;
+        (nuova2) -->!;
+    }

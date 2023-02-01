@@ -1,0 +1,109 @@
+|| FUNZIONI PER LA GESTIONE DI INPUT E OUTPUT
+def choiceOperation(): integer {
+	integer op;
+
+	("Quale operazione vuoi eseguire?") -->! ;
+	("1. Somma di due numeri") -->! ;
+	("2. Moltiplicazione di due numeri(tramite somma)") -->! ;
+	("3. Divisione intera tra due numeri positivi") -->! ;
+	("4. Elevamento a potenza") -->! ;
+	("5. Successione di fibonacci") -->! ;
+	op <-- ;
+
+	return op;
+}
+
+|| Programma principale
+start:
+def main(): void {
+
+	integer choice << choiceOperation();
+	integer risultato;
+	float result;
+
+	if choice = 1 then {
+        result << sum();
+        ("Il risultato è ", result) -->!;
+	}
+
+	if choice = 2 then {
+        risultato << mul();
+        ("Il risultato è ", risultato) -->!;
+    }
+
+    if choice = 3 then {
+        result << div();
+        ("Il risultato è ", result) -->!;
+    }
+
+    if choice = 4 then {
+        result << pow();
+        ("Il risultato è ", result) -->!;
+    }
+
+    if choice = 5 then {
+        fibonacci();
+    }
+}
+
+def sum(): float{
+    float a, b;
+    ("Inserire primo numero") -->! ;
+    a <-- ;
+    ("Inserire secondo numero") -->! ;
+    b <-- ;
+
+    return (a + b);
+}
+
+def mul(): integer {
+    integer a, b, i, result << 0;
+    ("Inserire primo numero") -->! ;
+    a <-- ;
+    ("Inserire secondo numero") -->! ;
+    b <-- ;
+
+    for i << 0 to (b - 1) loop {
+        result << result + a;
+    }
+
+    return result;
+}
+
+def div(): float{
+    float a, b;
+    ("Inserire primo numero") -->! ;
+    a <-- ;
+    ("Inserire secondo numero") -->! ;
+    b <-- ;
+
+    return (a / b);
+}
+
+def pow(): float{
+    float a, b;
+    ("Inserire base della potenza") -->! ;
+    a <-- ;
+    ("Inserire esponente della potenza") -->! ;
+    b <-- ;
+
+    return (a ^ b);
+}
+
+def fibonacci(): void{
+    integer i, n, first << 1, second << 1, fib;
+    ("Quanti numeri della sequenza vuoi visualizzare?") --> ;
+    n <-- ;
+
+    (first) -->!;
+    (second) -->!;
+
+    if n != 1 then {
+        for i << 2 to (n - 1) loop{
+            fib << first + second;
+            first << second;
+            second << fib;
+            (fib) -->!;
+        }
+    }
+}

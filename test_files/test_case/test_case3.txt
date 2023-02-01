@@ -1,0 +1,13 @@
+|| TEST CASE: prova stampa di un parametro out di tipo string
+
+def provaVoid(out string ciao): void{
+    ciao << "1";
+
+    (ciao) -->!;
+}
+
+start:
+def start(): void {
+    string p << "C";
+    provaVoid(p);
+}
